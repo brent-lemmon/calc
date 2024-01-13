@@ -1,7 +1,7 @@
 package test
 
 import (
-	"calc/pkg/rpn"
+	"github.com/brent-lemmon/calc/pkg/rpn"
 	"reflect"
 	"testing"
 )

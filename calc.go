@@ -2,8 +2,8 @@ package main
 
 import (
 	"bufio"
-	"calc/pkg/rpn"
 	"fmt"
+	"github.com/brent-lemmon/calc/pkg/rpn"
 	"os"
 	"strings"
 )
