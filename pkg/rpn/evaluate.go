@@ -1,4 +1,4 @@
-package compute
+package rpn
 
 import (
 	"errors"
@@ -26,8 +26,8 @@ func popTwoArgs(nums *[]float64) (float64, float64, error) {
 	return arg1, arg2, nil
 }
 
-func EvaluateRpn(rpn *[]string) (float64, error) {
-	//fmt.Printf("EvaluateRpn received: %v\n", *rpn)
+func Evaluate(rpn *[]string) (float64, error) {
+	//fmt.Printf("Evaluate received: %v\n", *rpn)
 	nums := make([]float64, 0, len(*rpn))
 	for _, tok := range *rpn {
 		switch tok {

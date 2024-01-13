@@ -1,4 +1,4 @@
-package parse
+package rpn
 
 import (
 	"errors"
@@ -91,9 +91,9 @@ func processRightParen(rpn *[]string, ops *[]string) error {
 	return errors.New("mismatched parenthesis")
 }
 
-// Rpn takes an input string and returns the inputs tokenized and in Reverse Polish Notation.
+// ToRpn takes an input string and returns the inputs tokenized and in Reverse Polish Notation.
 // See https://en.wikipedia.org/wiki/Shunting_yard_algorithm#The_algorithm_in_detail
-func Rpn(in string) (*[]string, error) {
+func ToRpn(in string) (*[]string, error) {
 	scnr := initScanner(in)
 	supOps := getSupportedOperators()
 	supConsts := getSupportedConstants()

@@ -2,8 +2,7 @@ package main
 
 import (
 	"bufio"
-	"calc/internal/compute"
-	"calc/internal/parse"
+	"calc/pkg/rpn"
 	"fmt"
 	"os"
 	"strings"
@@ -23,12 +22,12 @@ func main() {
 		}
 	}
 
-	rpn, err := parse.Rpn(input)
+	tokens, err := rpn.ToRpn(input)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
-	output, err := compute.EvaluateRpn(rpn)
+	output, err := rpn.Evaluate(tokens)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
