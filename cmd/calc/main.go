@@ -28,10 +28,10 @@ func main() {
 		fmt.Println(err.Error())
 	}
 
-	output, err := compute.Evaluate(rpn)
+	output, err := compute.EvaluateRpn(rpn)
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
-		fmt.Printf("RPN: %v\n", output)
+		fmt.Printf("Value: %f\n", output)
 	}
 }
