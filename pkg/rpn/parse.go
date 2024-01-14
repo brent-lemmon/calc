@@ -42,11 +42,11 @@ var constants = map[string]float64{
 func comparePrecedence(op1 string, op2 string) (int, error) {
 	prec1, found := operatorPrecedences[op1]
 	if !found {
-		return 0, fmt.Errorf("no operator precedence found for '%s'\n", op1)
+		return 0, fmt.Errorf("no operator precedence found for '%s'", op1)
 	}
 	prec2, found := operatorPrecedences[op2]
 	if !found {
-		return 0, fmt.Errorf("No operator precedence found for '%s'\n", op1)
+		return 0, fmt.Errorf("no operator precedence found for '%s'", op1)
 	}
 	return prec1 - prec2, nil
 }
@@ -126,24 +126,24 @@ func validate(tok token.Token, lit string, op string, isOp bool, prev string, wa
 	switch {
 	case isNumber(prev) || prev == ")":
 		if isNumber(lit) || isFunction(lit) {
-			return fmt.Errorf("invalid input sequence '%s' '%s'\n", prev, lit)
+			return fmt.Errorf("invalid input sequence '%s' '%s'", prev, lit)
 		}
 		if tok == token.LPAREN {
-			return fmt.Errorf("invalid input sequence '%s' '('\n", prev, lit)
+			return fmt.Errorf("invalid input sequence '%s' '('", prev)
 		}
 	case isFunction(prev):
 		if isNumber(lit) || isFunction(lit) {
-			return fmt.Errorf("invalid input sequence '%s' '%s'\n", prev, lit)
+			return fmt.Errorf("invalid input sequence '%s' '%s'", prev, lit)
 		}
 	case wasPrevOp || prev == "," || prev == "(":
 		if isOp {
-			return fmt.Errorf("invalid input sequence '%s' '%s'\n", prev, op)
+			return fmt.Errorf("invalid input sequence '%s' '%s'", prev, op)
 		}
 		if tok == token.RPAREN {
-			return fmt.Errorf("invalid input sequence '%s' ')'\n", prev)
+			return fmt.Errorf("invalid input sequence '%s' ')'", prev)
 		}
 		if tok == token.COMMA {
-			return fmt.Errorf("invalid input sequence '%s' ','\n", prev)
+			return fmt.Errorf("invalid input sequence '%s' ','", prev)
 		}
 	}
 	return nil
@@ -202,7 +202,7 @@ func ToRpn(in string) (*[]string, error) {
 			prev = ")"
 		case tok == token.SEMICOLON: //Ignore
 		default:
-			return nil, fmt.Errorf("error parsing input at token %s with value %s\n", tok.String(), lit)
+			return nil, fmt.Errorf("error parsing input at token %s with value %s", tok.String(), lit)
 		}
 		wasPrevOp = isOp
 		//fmt.Printf("RPN: %v, OPS: %v\n", rpn, ops)

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/brent-lemmon/calc/internal/ui"
 	"github.com/brent-lemmon/calc/pkg/rpn"
 	"os"
@@ -13,13 +12,13 @@ func main() {
 		input := strings.Join(os.Args[1:], "")
 		tokens, err := rpn.ToRpn(input)
 		if err != nil {
-			fmt.Println(err.Error())
+			ui.DisplayError(err)
 		} else {
-			output, err := rpn.Evaluate(tokens)
+			res, err := rpn.Evaluate(tokens)
 			if err != nil {
-				fmt.Println(err.Error())
+				ui.DisplayError(err)
 			} else {
-				fmt.Printf("= %f\n", output)
+				ui.DisplayResult(res)
 			}
 		}
 	} else {
