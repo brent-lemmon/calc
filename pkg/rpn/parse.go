@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"go/scanner"
 	"go/token"
-	"log"
 	"math"
 	"strconv"
 )
@@ -40,16 +39,16 @@ var constants = map[string]float64{
 }
 
 // comparePrecedence evaluates the precedence difference between operators
-func comparePrecedence(op1 string, op2 string) int {
+func comparePrecedence(op1 string, op2 string) (int, error) {
 	prec1, found := operatorPrecedences[op1]
 	if !found {
-		log.Panicf("No operator precedence found for '%s'", op1)
+		return 0, fmt.Errorf("no operator precedence found for '%s'\n", op1)
 	}
 	prec2, found := operatorPrecedences[op2]
 	if !found {
-		log.Panicf("No operator precedence found for '%s'", op1)
+		return 0, fmt.Errorf("No operator precedence found for '%s'\n", op1)
 	}
-	return prec1 - prec2
+	return prec1 - prec2, nil
 }
 
 // isNumber evaluates whether the supplied string is a number or constant
@@ -80,14 +79,21 @@ func isLeftAssociative(op string) bool {
 }
 
 // processOperator processes an operator according to the Shunting Yard Algorithm
-func processOperator(rpn *[]string, ops *[]string, op string) {
-	for len(*ops) > 0 && (*ops)[len(*ops)-1] != "(" &&
-		(comparePrecedence((*ops)[len(*ops)-1], op) > 0 ||
-			comparePrecedence((*ops)[len(*ops)-1], op) == 0 && isLeftAssociative(op)) { //
-		*rpn = append(*rpn, (*ops)[len(*ops)-1])
-		*ops = (*ops)[:len(*ops)-1]
+func processOperator(rpn *[]string, ops *[]string, op string) error {
+	for len(*ops) > 0 && (*ops)[len(*ops)-1] != "(" {
+		diff, err := comparePrecedence((*ops)[len(*ops)-1], op)
+		if err != nil {
+			return err
+		}
+		if diff > 0 || (diff == 0 && isLeftAssociative(op)) {
+			*rpn = append(*rpn, (*ops)[len(*ops)-1])
+			*ops = (*ops)[:len(*ops)-1]
+		} else {
+			break
+		}
 	}
 	*ops = append(*ops, op)
+	return nil
 }
 
 // processComma processes a comma according to the Shunting Yard Algorithm
@@ -177,7 +183,10 @@ func ToRpn(in string) (*[]string, error) {
 			ops = append(ops, lit)
 			prev = lit
 		case isOp:
-			processOperator(&rpn, &ops, op)
+			err := processOperator(&rpn, &ops, op)
+			if err != nil {
+				return nil, err
+			}
 			prev = op
 		case tok == token.COMMA:
 			processComma(&rpn, &ops)
