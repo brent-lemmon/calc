@@ -68,12 +68,30 @@ func Evaluate(rpn *[]string) (float64, error) {
 				return 0, fmt.Errorf("%s for sin function", err.Error())
 			}
 			nums = append(nums, math.Sin(arg))
+		case "cos":
+			arg, err := popArg(&nums)
+			if err != nil {
+				return 0, fmt.Errorf("%s for cos function", err.Error())
+			}
+			nums = append(nums, math.Cos(arg))
+		case "tan":
+			arg, err := popArg(&nums)
+			if err != nil {
+				return 0, fmt.Errorf("%s for tan function", err.Error())
+			}
+			nums = append(nums, math.Tan(arg))
 		case "max":
 			arg1, arg2, err := popTwoArgs(&nums)
 			if err != nil {
 				return 0, fmt.Errorf("%s for max function", err.Error())
 			}
 			nums = append(nums, math.Max(arg1, arg2))
+		case "min":
+			arg1, arg2, err := popTwoArgs(&nums)
+			if err != nil {
+				return 0, fmt.Errorf("%s for min function", err.Error())
+			}
+			nums = append(nums, math.Min(arg1, arg2))
 		default:
 			num, err := strconv.ParseFloat(tok, 64)
 			if err != nil {

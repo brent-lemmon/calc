@@ -31,7 +31,7 @@ var operatorPrecedences = map[string]int{
 var rightAssociativeOperators = []string{"^"}
 
 // functions lists of all supported functions
-var functions = []string{"sin", "max"}
+var functions = []string{"sin", "cos", "tan", "max", "min"}
 
 // constants maps all supported constants to their respective values
 var constants = map[string]float64{
