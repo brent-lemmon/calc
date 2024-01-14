@@ -27,7 +27,6 @@ func popTwoArgs(nums *[]float64) (float64, float64, error) {
 }
 
 func Evaluate(rpn *[]string) (float64, error) {
-	//fmt.Printf("Evaluate received: %v\n", *rpn)
 	nums := make([]float64, 0, len(*rpn))
 	for _, tok := range *rpn {
 		switch tok {
@@ -66,13 +65,13 @@ func Evaluate(rpn *[]string) (float64, error) {
 		case "sin":
 			arg, err := popArg(&nums)
 			if err != nil {
-				return 0, fmt.Errorf("%s for sin operation", err.Error())
+				return 0, fmt.Errorf("%s for sin function", err.Error())
 			}
 			nums = append(nums, math.Sin(arg))
 		case "max":
 			arg1, arg2, err := popTwoArgs(&nums)
 			if err != nil {
-				return 0, fmt.Errorf("%s for power operation", err.Error())
+				return 0, fmt.Errorf("%s for max function", err.Error())
 			}
 			nums = append(nums, math.Max(arg1, arg2))
 		default:
