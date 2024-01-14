@@ -5,9 +5,145 @@ import (
 	"fmt"
 	"go/scanner"
 	"go/token"
+	"log"
 	"math"
+	"strconv"
 )
 
+// operators map go/Token values to their corresponding strings for all supported operators
+var operators = map[token.Token]string{
+	token.ADD: "+",
+	token.SUB: "-",
+	token.MUL: "*",
+	token.QUO: "/",
+	token.XOR: "^",
+}
+
+// operatorPrecedences map all supported operators to their corresponding precedence
+var operatorPrecedences = map[string]int{
+	"+": 1,
+	"-": 1,
+	"*": 2,
+	"/": 2,
+	"^": 3,
+}
+
+// rightAssociativeOperators lists all supported left associative operators
+var rightAssociativeOperators = []string{"^"}
+
+// functions lists of all supported functions
+var functions = []string{"sin", "max"}
+
+// constants maps all supported constants to their respective values
+var constants = map[string]float64{
+	"pi": math.Pi,
+}
+
+// comparePrecedence evaluates the precedence difference between operators
+func comparePrecedence(op1 string, op2 string) int {
+	prec1, found := operatorPrecedences[op1]
+	if !found {
+		log.Panicf("No operator precedence found for '%s'", op1)
+	}
+	prec2, found := operatorPrecedences[op2]
+	if !found {
+		log.Panicf("No operator precedence found for '%s'", op1)
+	}
+	return prec1 - prec2
+}
+
+// isNumber evaluates whether the supplied string is a number or constant
+func isNumber(num string) bool {
+	_, parseErr := strconv.ParseFloat(num, 64)
+	_, isConst := constants[num]
+	return parseErr == nil || isConst
+}
+
+// isFunction evaluates whether the supplied string is a supported function
+func isFunction(fun string) bool {
+	for _, function := range functions {
+		if function == fun {
+			return true
+		}
+	}
+	return false
+}
+
+// isLeftAssociative evaluates whether the supplied string is a left associative operator
+func isLeftAssociative(op string) bool {
+	for _, operator := range rightAssociativeOperators {
+		if operator == op {
+			return false
+		}
+	}
+	return true
+}
+
+// processOperator processes an operator according to the Shunting Yard Algorithm
+func processOperator(rpn *[]string, ops *[]string, op string) {
+	for len(*ops) > 0 && (*ops)[len(*ops)-1] != "(" &&
+		(comparePrecedence((*ops)[len(*ops)-1], op) > 0 ||
+			comparePrecedence((*ops)[len(*ops)-1], op) == 0 && isLeftAssociative(op)) { //
+		*rpn = append(*rpn, (*ops)[len(*ops)-1])
+		*ops = (*ops)[:len(*ops)-1]
+	}
+	*ops = append(*ops, op)
+}
+
+// processComma processes a comma according to the Shunting Yard Algorithm
+func processComma(rpn *[]string, ops *[]string) {
+	for len(*ops) > 0 && (*ops)[len(*ops)-1] != "(" {
+		*rpn = append(*rpn, (*ops)[len(*ops)-1])
+		*ops = (*ops)[:len(*ops)-1]
+	}
+}
+
+// processRightParen processes a right parenthesis according to the Shunting Yard Algorithm
+func processRightParen(rpn *[]string, ops *[]string) error {
+	for i := len(*ops) - 1; i >= 0 && (*ops)[i] != "("; i-- {
+		*rpn = append(*rpn, (*ops)[i])
+		*ops = (*ops)[:i]
+	}
+	if len(*ops) > 0 && (*ops)[len(*ops)-1] == "(" {
+		*ops = (*ops)[:len(*ops)-1]
+		if len(*ops) > 0 && isFunction((*ops)[len(*ops)-1]) {
+			*rpn = append(*rpn, (*ops)[len(*ops)-1])
+			*ops = (*ops)[:len(*ops)-1]
+		}
+		return nil
+	}
+	return errors.New("mismatched parenthesis")
+}
+
+// validate checks whether the previous and current token are a valid input sequence
+func validate(tok token.Token, lit string, op string, isOp bool, prev string, wasPrevOp bool) error {
+	switch {
+	case isNumber(prev) || prev == ")":
+		if isNumber(lit) || isFunction(lit) {
+			return fmt.Errorf("invalid input sequence '%s' '%s'\n", prev, lit)
+		}
+		if tok == token.LPAREN {
+			return fmt.Errorf("invalid input sequence '%s' '('\n", prev, lit)
+		}
+	case isFunction(prev):
+		if isNumber(lit) || isFunction(lit) {
+			return fmt.Errorf("invalid input sequence '%s' '%s'\n", prev, lit)
+		}
+	case wasPrevOp || prev == "," || prev == "(":
+		if isOp {
+			return fmt.Errorf("invalid input sequence '%s' '%s'\n", prev, op)
+		}
+		if tok == token.RPAREN {
+			return fmt.Errorf("invalid input sequence '%s' ')'\n", prev)
+		}
+		if tok == token.COMMA {
+			return fmt.Errorf("invalid input sequence '%s' ','\n", prev)
+		}
+	}
+	return nil
+}
+
+// initScanner creates a scanner to read the provided string
 func initScanner(in string) scanner.Scanner {
 	var scnr scanner.Scanner
 	src := []byte(in)
@@ -17,130 +153,50 @@ func initScanner(in string) scanner.Scanner {
 	return scnr
 }
 
-func getSupportedOperators() *map[token.Token]string {
-	return &map[token.Token]string{
-		token.ADD: "+",
-		token.SUB: "-",
-		token.MUL: "*",
-		token.QUO: "/",
-		token.XOR: "^",
-	}
-}
-
-func getSupportedConstants() *map[string]float64 {
-	return &map[string]float64{
-		"pi": math.Pi,
-	}
-}
-
-func getPrecedence(op string) int {
-	switch op {
-	case "+":
-		return 1
-	case "-":
-		return 1
-	case "*":
-		return 2
-	case "/":
-		return 2
-	case "^":
-		return 3
-	default:
-		return 0
-	}
-}
-
-func isSupportedFunction(fun string) bool {
-	return fun == "sin" || fun == "max"
-}
-
-func isLeftAssociative(op string) bool {
-	return op != "^"
-}
-
-func processOperators(rpn *[]string, ops *[]string, op string) {
-	for len(*ops) > 0 && (*ops)[len(*ops)-1] != "(" &&
-		(getPrecedence((*ops)[len(*ops)-1]) > getPrecedence(op) ||
-			getPrecedence((*ops)[len(*ops)-1]) == getPrecedence(op) && isLeftAssociative(op)) { //
-		*rpn = append(*rpn, (*ops)[len(*ops)-1])
-		*ops = (*ops)[:len(*ops)-1]
-	}
-	*ops = append(*ops, op)
-}
-
-func processComma(rpn *[]string, ops *[]string) {
-	for len(*ops) > 0 && (*ops)[len(*ops)-1] != "(" {
-		*rpn = append(*rpn, (*ops)[len(*ops)-1])
-		*ops = (*ops)[:len(*ops)-1]
-	}
-}
-
-func processRightParen(rpn *[]string, ops *[]string) error {
-	for i := len(*ops) - 1; i >= 0 && (*ops)[i] != "("; i-- {
-		*rpn = append(*rpn, (*ops)[i])
-		*ops = (*ops)[:i]
-	}
-	if len(*ops) > 0 && (*ops)[len(*ops)-1] == "(" {
-		*ops = (*ops)[:len(*ops)-1]
-		if len(*ops) > 0 && isSupportedFunction((*ops)[len(*ops)-1]) {
-			*rpn = append(*rpn, (*ops)[len(*ops)-1])
-			*ops = (*ops)[:len(*ops)-1]
-		}
-		return nil
-	}
-	return errors.New("mismatched parenthesis")
-}
-
 // ToRpn takes an input string and returns the inputs tokenized and in Reverse Polish Notation.
 // See https://en.wikipedia.org/wiki/Shunting_yard_algorithm#The_algorithm_in_detail
 func ToRpn(in string) (*[]string, error) {
 	scnr := initScanner(in)
-	supOps := getSupportedOperators()
-	supConsts := getSupportedConstants()
 	rpn := make([]string, 0, len(in))
 	ops := make([]string, 0, len(in))
 	_, tok, lit := scnr.Scan()
-	prevOp := ""
+	prev := ""
 	wasPrevOp := false
 	for tok != token.EOF {
-		op, isOp := (*supOps)[tok]
+		op, isOp := operators[tok]
+		err := validate(tok, lit, op, isOp, prev, wasPrevOp)
+		if err != nil {
+			return nil, err
+		}
 		//fmt.Printf("tok: %s    lit: %s\n", tok.String(), lit)
 		switch {
-		case tok == token.INT || tok == token.FLOAT:
+		case isNumber(lit):
 			rpn = append(rpn, lit)
-		case tok == token.STRING || tok == token.IDENT:
-			_, isConst := (*supConsts)[lit]
-			if isConst {
-				rpn = append(rpn, lit)
-			} else if isSupportedFunction(lit) {
-				ops = append(ops, lit)
-			} else {
-				return nil, fmt.Errorf("error parsing invalid token %s", lit)
-			}
+			prev = lit
+		case isFunction(lit):
+			ops = append(ops, lit)
+			prev = lit
 		case isOp:
-			if wasPrevOp {
-				return nil, fmt.Errorf("error parsing back to back operators: %s%s\n", prevOp, op)
-			}
-			processOperators(&rpn, &ops, op)
+			processOperator(&rpn, &ops, op)
+			prev = op
 		case tok == token.COMMA:
-			if wasPrevOp {
-				return nil, fmt.Errorf("error parsing '%s' followed by ','\n", prevOp)
-			}
 			processComma(&rpn, &ops)
+			prev = ","
 		case tok == token.LPAREN:
 			ops = append(ops, "(")
+			prev = "("
 		case tok == token.RPAREN:
 			err := processRightParen(&rpn, &ops)
 			if err != nil {
 				return nil, err
 			}
+			prev = ")"
 		case tok == token.SEMICOLON: //Ignore
 		default:
 			return nil, fmt.Errorf("error parsing input at token %s with value %s\n", tok.String(), lit)
 		}
-		//fmt.Printf("RPN: %v, OPS: %v\n", rpn, ops)
-		prevOp = op
 		wasPrevOp = isOp
+		//fmt.Printf("RPN: %v, OPS: %v\n", rpn, ops)
 		_, tok, lit = scnr.Scan()
 	}
 	for len(ops) > 0 {

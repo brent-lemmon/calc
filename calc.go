@@ -25,12 +25,12 @@ func main() {
 	tokens, err := rpn.ToRpn(input)
 	if err != nil {
 		fmt.Println(err.Error())
-	}
-
-	output, err := rpn.Evaluate(tokens)
-	if err != nil {
-		fmt.Println(err.Error())
 	} else {
-		fmt.Printf("Value: %f\n", output)
+		output, err := rpn.Evaluate(tokens)
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			fmt.Printf("Value: %f\n", output)
+		}
 	}
 }
