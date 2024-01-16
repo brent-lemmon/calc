@@ -8,21 +8,32 @@ import (
 	"os"
 )
 
+var red = "\033[31m"
+var green = "\033[32m"
+var resetColor = "\033[0m"
+
 func DisplayResult(res float64) {
+	var output string
 	if math.Trunc(res) == res {
-		fmt.Printf("= %d\n", int(res))
+		output = fmt.Sprintf("= %d\n", int(res))
 	} else {
-		fmt.Printf("= %f\n", res)
+		output = fmt.Sprintf("= %f\n", res)
 	}
+	fmt.Print(green, output)
 }
 
 func DisplayError(err error) {
-	fmt.Printf("X %s\n", err.Error())
+	output := fmt.Sprintf("X %s\n", err.Error())
+	fmt.Print(red, output)
+}
+
+func displayPrompt() {
+	fmt.Print(resetColor, "> ")
 }
 
 func Start() {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("> ")
+	displayPrompt()
 	input, err := reader.ReadString('\n')
 	for input != "q\r\n" && input != "quit\r\n" && input != "exit\r\n" {
 		if err != nil {
@@ -40,7 +51,7 @@ func Start() {
 				DisplayResult(res)
 			}
 		}
-		fmt.Print("> ")
+		displayPrompt()
 		input, err = reader.ReadString('\n')
 	}
 }
