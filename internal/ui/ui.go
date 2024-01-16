@@ -12,6 +12,10 @@ var red = "\033[31m"
 var green = "\033[32m"
 var resetColor = "\033[0m"
 
+func displayPrompt() {
+	fmt.Print(resetColor, "> ")
+}
+
 func DisplayResult(res float64) {
 	var output string
 	if math.Trunc(res) == res {
@@ -25,10 +29,6 @@ func DisplayResult(res float64) {
 func DisplayError(err error) {
 	output := fmt.Sprintf("X %s\n", err.Error())
 	fmt.Print(red, output)
-}
-
-func displayPrompt() {
-	fmt.Print(resetColor, "> ")
 }
 
 func Start() {
