@@ -54,6 +54,8 @@ func Evaluate(rpn *[]string) (float64, error) {
 			arg1, arg2, err := popTwoArgs(&nums)
 			if err != nil {
 				return 0, fmt.Errorf("%s for division", err.Error())
+			} else if arg2 == 0 {
+				return 0, errors.New("div by 0")
 			}
 			nums = append(nums, arg1/arg2)
 		case "^":
